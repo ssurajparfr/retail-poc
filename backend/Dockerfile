@@ -1,14 +1,35 @@
-# Use the official Java 21 runtime image
-FROM eclipse-temurin:21-jdk-alpine
+# ---- Build Stage ----
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
-# Set working directory in container
 WORKDIR /app
 
-# Copy the JAR file into the container
-COPY target/retail-shopping-0.0.1-SNAPSHOT.jar app.jar
+# Copy Maven wrapper
+COPY .mvn/ .mvn/
+COPY mvnw mvnw.cmd ./
 
-# Expose the port your Spring Boot app runs on
+# Copy project files
+COPY pom.xml .
+COPY src ./src
+
+# Make wrapper executable
+RUN chmod +x mvnw
+
+# Copy only pom.xml first
+COPY pom.xml .
+RUN ./mvnw -B -DskipTests dependency:go-offline
+
+# Then copy source code
+COPY src ./src
+RUN ./mvnw -B -DskipTests package
+
+# ---- Runtime Stage ----
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+# Copy the stable-name jar from the builder stage
+COPY --from=builder /app/target/app.jar app.jar
+
 EXPOSE 8080
 
-# Run the Spring Boot app
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

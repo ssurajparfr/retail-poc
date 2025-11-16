@@ -13,6 +13,7 @@
 	<name>Retail Shopping</name>
 	<description>Proof-of-concept online retail application with Spring Boot backend, React frontend, PostgreSQL database, and Snowflake analytics integration</description>
 	<version>0.0.1-SNAPSHOT</version>
+
 	<url/>
 	<licenses>
 		<license/>
@@ -66,9 +67,15 @@
    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
    <version>2.8.1</version>
 </dependency>
+
+	<dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-actuator</artifactId>
+	</dependency>
 	</dependencies>
 
 	<build>
+		<finalName>app</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
