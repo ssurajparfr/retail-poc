@@ -1,0 +1,41 @@
+# ========================
+# Backend (Spring Boot)
+# ========================
+/backend/target/
+*.class
+*.log
+
+# ========================
+# Frontend (React + Tailwind)
+# ========================
+/frontend/node_modules/
+/frontend/build/
+/frontend/.pnp
+/frontend/.pnp.js
+/frontend/coverage
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+
+# ========================
+# Database
+# ========================
+/db/*.dump
+/db/*.csv
+
+# ========================
+# OS / IDE files
+# ========================
+.DS_Store
+*.iml
+.vscode/
+.idea/
+
+# ========================
+# Environment files
+# ========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

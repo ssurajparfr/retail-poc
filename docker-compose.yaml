@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: retail_user
+      POSTGRES_PASSWORD: retail_pass
+      POSTGRES_DB: retail_poc
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Backend (Spring Boot)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: retail-poc-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/retail_poc
+      SPRING_DATASOURCE_USERNAME: retail_user
+      SPRING_DATASOURCE_PASSWORD: retail_pass
+    depends_on:
+      - postgres
+
+  # Frontend (React + Tailwind)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: retail-poc-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
