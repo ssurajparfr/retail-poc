@@ -16,10 +16,8 @@ services:
 
   # Backend (Spring Boot)
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: retail-poc-backend
+    image: ssurajparfr/retail-backend:1.0
+    container_name: retail-backend
     ports:
       - "8080:8080"
     environment:
@@ -29,14 +27,12 @@ services:
     depends_on:
       - postgres
 
-  # Frontend (React + Tailwind)
+  # Frontend (React)
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: retail-poc-frontend
+    image: ssurajparfr/retail-frontend:1.0
+    container_name: retail-frontend
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on:
       - backend
 

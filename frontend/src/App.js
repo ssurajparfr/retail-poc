@@ -610,7 +610,7 @@ function OrdersView({ currentCustomer }) {
   const fetchCustomerOrders = async () => {
     setLoading(true);
   try {
-    const response = await fetch(`http://localhost:8080/api/orders/${currentCustomer.customerId}`);
+    const response = await fetch(`${API_BASE_URL}/orders/${currentCustomer.customerId}`);
     if (!response.ok) throw new Error('Failed to fetch orders');
     const data = await response.json();
     setOrders(data);

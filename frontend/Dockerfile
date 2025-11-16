@@ -1,17 +1,27 @@
-# Use Node 24 for building and running React app
-FROM node:24
-
+# ---- Build Stage ----
+FROM node:24 AS builder
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package.json package-lock.json ./
+# Copy package files first for caching
+COPY package*.json ./
+
+# Install dependencies using npm install (works across OS)
 RUN npm install
 
-# Copy source code
+# Copy the rest of the source code
 COPY . .
 
-# Expose dev server port
-EXPOSE 3000
+# Build the production-ready React app
+RUN npm run build
 
-# Start React development server
-CMD ["npm", "start"]
+# ---- Production Stage ----
+FROM nginx:alpine
+
+# Copy built files from builder stage
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Expose Nginx port
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]
