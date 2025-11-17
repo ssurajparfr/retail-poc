@@ -5,13 +5,15 @@ WORKDIR /app
 # Copy package files first for caching
 COPY package*.json ./
 
-# Install dependencies using npm install (works across OS)
-RUN npm install
+# Install dependencies using npm ci (faster & deterministic)
+RUN npm ci
 
 # Copy the rest of the source code
 COPY . .
 
 # Build the production-ready React app
+ARG REACT_APP_API_BASE_URL
+ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
 RUN npm run build
 
 # ---- Production Stage ----
