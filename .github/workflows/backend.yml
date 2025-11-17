@@ -3,8 +3,14 @@ name: Build & Push Backend Docker Image
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'pom.xml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'pom.xml'
 
 jobs:
   build-and-push:

@@ -3,31 +3,53 @@ name: Build & Push Frontend Docker Image
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - 'package.json'
+      - 'package-lock.json'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'frontend/**'
+      - 'package.json'
+      - 'package-lock.json'
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Cache npm dependencies
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Step 3: Log in to DockerHub
       - name: Log in to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # Step 4: Build & push Docker image with buildx & cache
       - name: Build & Push Frontend Image
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
-          build-args: |
-            REACT_APP_API_BASE_URL=http://retail-backend:8080/api
           push: true
           tags: |
             ssurajparfr/retail-frontend:latest
             ssurajparfr/retail-frontend:${{ github.sha }}
+          build-args: |
+            REACT_APP_API_BASE_URL=${{ secrets.BACKEND_API_URL }}
+          cache-from: type=registry,ref=ssurajparfr/retail-frontend:cache
+          cache-to: type=registry,ref=ssurajparfr/retail-frontend:cache,mode=max

@@ -5,8 +5,8 @@ WORKDIR /app
 # Step 1: Copy package files for dependency caching
 COPY package.json package-lock.json ./
 
-# Step 2: Install dependencies (cached unless package files change)
-RUN npm ci
+# Step 2: Install dependencies (tolerant to lockfile mismatch)
+RUN npm install
 
 # Step 3: Copy rest of the source code
 COPY . .
