@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: retail-backend
+  namespace: retail
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: retail-backend
+  template:
+    metadata:
+      labels:
+        app: retail-backend
+    spec:
+      containers:
+        - name: backend
+          image: ssurajparfr/retail-backend:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres:5432/retail_poc
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: retail-backend
+  namespace: retail
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: retail-backend
