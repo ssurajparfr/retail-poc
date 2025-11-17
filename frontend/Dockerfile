@@ -2,28 +2,30 @@
 FROM node:24 AS builder
 WORKDIR /app
 
-# Copy package files first for caching
-COPY package*.json ./
+# Step 1: Copy package files for dependency caching
+COPY package.json package-lock.json ./
 
-# Install dependencies using npm ci (faster & deterministic)
+# Step 2: Install dependencies (cached unless package files change)
 RUN npm ci
 
-# Copy the rest of the source code
+# Step 3: Copy rest of the source code
 COPY . .
 
-# Build the production-ready React app
+# Step 4: Set backend API URL
 ARG REACT_APP_API_BASE_URL
 ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
+
+# Step 5: Build production-ready React app
 RUN npm run build
 
 # ---- Production Stage ----
 FROM nginx:alpine
 
-# Copy built files from builder stage
+# Step 6: Copy built app from builder stage
 COPY --from=builder /app/build /usr/share/nginx/html
 
-# Expose Nginx port
+# Step 7: Expose Nginx port
 EXPOSE 80
 
-# Start Nginx
+# Step 8: Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
