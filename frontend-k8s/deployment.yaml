@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: retail-frontend
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: retail-frontend
+  template:
+    metadata:
+      labels:
+        app: retail-frontend
+    spec:
+      containers:
+      - name: retail-frontend
+        image: ssurajparfr/retail-frontend:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: REACT_APP_API_BASE_URL
+          value: "http://your-backend-service:5000"
