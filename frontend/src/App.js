@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, User, Package, TrendingUp, LogOut, Home } from 'lucide-react';
 
-const API_BASE_URL = "http://localhost:8080/api";
+// Use environment variable when provided (e.g. in dev or CI).
+// Fallback to the local k8s host used for development (must map to localhost in hosts file).
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://my.retail.local/api';
 
 // --- ADDED: auth helpers and apiFetch wrapper ---
 const AUTH_TOKEN_KEY = 'retail_token';
