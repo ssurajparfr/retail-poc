@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: retail-frontend
-        image: ssurajparfr/retail-frontend:6321d356c0e7cdfaba2d116cdbc895a8c370840c
+        image: ssurajparfr/retail-frontend:c6aa9958fbea3931aa515e68a771a7621c994e89
         imagePullPolicy: Always
         ports:
         - containerPort: 80
