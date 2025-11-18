@@ -2,6 +2,9 @@ package com.retailcorp.retailshopping.entity;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,6 +22,9 @@ public class Customer {
     private String firstName;
     private String lastName;
     private String email;
+    @Column(name = "password_hash", nullable = false)
+    @JsonIgnore
+    private String passwordHash;
     private String phone;
     private String address;
     private String city;

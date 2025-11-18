@@ -13,7 +13,7 @@ spring:
       platform: ${SPRING_SQL_PLATFORM:postgres}
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:retail_poc}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:retail_poc}
     username: ${DB_USERNAME:retail_user}
     password: ${DB_PASSWORD:retail_pass}
     driver-class-name: org.postgresql.Driver
@@ -29,3 +29,7 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+
+jwt:
+  secret: ${RETAIL_JWT_SECRET}
+  expiration: 86400000  # 24 hours

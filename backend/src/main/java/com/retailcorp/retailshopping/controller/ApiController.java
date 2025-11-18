@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.retailcorp.retailshopping.dto.RegisterRequest;
 import com.retailcorp.retailshopping.entity.Customer;
 import com.retailcorp.retailshopping.entity.CustomerEvent;
 import com.retailcorp.retailshopping.entity.Order;
@@ -47,8 +48,13 @@ public class ApiController {
     }
 
     @PostMapping("/customers")
-    public Customer createCustomer(@RequestBody Customer customer) {
+    public Customer createCustomer(@RequestBody RegisterRequest customer) {
         return customerService.createCustomer(customer);
+    }
+
+    @GetMapping("/customers/search")
+    public java.util.List<Customer> searchCustomers(@RequestParam String email) {
+        return customerService.searchByEmail(email);
     }
 
     @GetMapping("/customers/{id}")
