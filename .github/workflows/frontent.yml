@@ -2,13 +2,13 @@ name: Build & Push Frontend Docker Image
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, enableauth ]
     paths:
       - 'frontend/**'
       - 'package.json'
       - 'package-lock.json'
   pull_request:
-    branches: [ main ]
+    branches: [ main, enableauth ]
     paths:
       - 'frontend/**'
       - 'package.json'
@@ -62,7 +62,6 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: |
-            ssurajparfr/retail-frontend:latest
             ssurajparfr/retail-frontend:${{ github.sha }}
           build-args: |
             REACT_APP_API_BASE_URL=${{ secrets.BACKEND_API_URL }}
