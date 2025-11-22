@@ -2,12 +2,12 @@ name: Build & Push Backend Docker Image
 
 on:
   push:
-    branches: [ main, enableauth ]
+    branches: [ "*" ]
     paths:
       - 'backend/**'
       - 'pom.xml'
   pull_request:
-    branches: [ main, enableauth ]
+    branches: [ main ]
     paths:
       - 'backend/**'
       - 'pom.xml'
