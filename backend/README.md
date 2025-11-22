@@ -1,55 +1,58 @@
-Retail Shopping API
+# Retail Shopping API
 
 A production-ready Spring Boot 3 REST API for retail shopping with JWT authentication, product catalog, customer events, and order management.
 
-Badges
-<p align="left"> <img src="https://img.shields.io/badge/Java-17-007396?logo=openjdk" /> <img src="https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot" /> <img src="https://img.shields.io/badge/PostgreSQL-15+-336791?logo=postgresql" /> <img src="https://img.shields.io/badge/Maven-Build-C71A36?logo=apache-maven" /> <img src="https://img.shields.io/badge/Test%20Coverage-98%25-brightgreen" /> <img src="https://img.shields.io/badge/License-MIT-blue" /> </p>
-Architecture
+<p align="left">
+  <img src="https://img.shields.io/badge/Java-17-007396?logo=openjdk" />
+  <img src="https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot" />
+  <img src="https://img.shields.io/badge/PostgreSQL-15+-336791?logo=postgresql" />
+  <img src="https://img.shields.io/badge/Maven-Build-C71A36?logo=apache-maven" />
+  <img src="https://img.shields.io/badge/Test%20Coverage-98%25-brightgreen" />
+  <img src="https://img.shields.io/badge/License-MIT-blue" />
+</p>
+
+## Architecture
+
+```mermaid
 flowchart TD
     A[Client Layer<br>React / Mobile] --> B[Security Layer<br>JWT Filter → SecurityConfig]
     B --> C[Controller Layer]
     C --> D[Service Layer]
     D --> E[Repository Layer<br>Spring Data JPA]
     E --> F[(PostgreSQL)]
+```
 
-Tech Stack
+## Tech Stack
 
-Java 17+
+- **Java 17+**
+- **Spring Boot 3.x**
+- **Spring Security** (JWT)
+- **Spring Data JPA** (Hibernate)
+- **PostgreSQL** / H2
+- **Lombok**
+- **JaCoCo**
+- **Swagger / OpenAPI**
 
-Spring Boot 3.x
+## Prerequisites
 
-Spring Security (JWT)
+- Java 17
+- Maven 3.8+
+- PostgreSQL 15+
+- (Optional) Docker
 
-Spring Data JPA (Hibernate)
+## Environment Variables
 
-PostgreSQL / H2
+`.env`:
 
-Lombok
-
-JaCoCo
-
-Swagger / OpenAPI
-
-Prerequisites
-
-Java 17
-
-Maven 3.8+
-
-PostgreSQL 15+
-
-(Optional) Docker
-
-Environment Variables
-
-.env:
-
+```bash
 RETAIL_JWT_SECRET=your-secret-key-min-32-characters
+```
 
-Configuration
+## Configuration
 
-src/main/resources/application.yaml
+`src/main/resources/application.yaml`
 
+```yaml
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/retaildb
@@ -63,24 +66,31 @@ spring:
 jwt:
   secret: ${RETAIL_JWT_SECRET}
   expiration: 86400000
+```
 
-Running the Application
-Maven
+## Running the Application
+
+### Maven
+
+```bash
 mvn clean install
 mvn spring-boot:run "-Dspring-boot.run.profiles=local"
+```
 
-Docker Support
+### Docker Support
 
-Dockerfile
+**Dockerfile**
 
+```dockerfile
 FROM eclipse-temurin:17-jdk
 WORKDIR /app
 COPY target/retailshopping.jar app.jar
 ENTRYPOINT ["java","-jar","/app/app.jar"]
+```
 
+**docker-compose.yaml**
 
-docker-compose.yaml
-
+```yaml
 version: '3.8'
 
 services:
@@ -104,54 +114,78 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
-
+```
 
 Run:
 
+```bash
 docker-compose up --build
+```
 
-API Endpoints
-Authentication
-Method	Endpoint	Description	Auth
-POST	/api/auth/register	Register new customer	No
-POST	/api/auth/login	Login & get JWT	No
-GET	/api/auth/me	Current logged-in user	Yes
-Customers
-Method	Endpoint	Description	Auth
-GET	/api/customers	Search customers	Yes
-POST	/api/customers	Create customer	No
-GET	/api/customers/{id}	Get customer details	Yes
-GET	/api/customers/{id}/events	Customer events	Yes
-Orders
-Method	Endpoint	Description	Auth
-POST	/api/orders/checkout	Place an order	Yes
-GET	/api/orders/customer/{customerId}	Get orders for customer	Yes
-Events
-Method	Endpoint	Description	Auth
-POST	/api/events	Log customer event	Yes
-GET	/api/events/customer/{customerId}	Get customer events	Yes
-Products
-Method	Endpoint	Description	Auth
-GET	/api/products	List all products	No
-GET	/api/products/search?query=	Search products	No
-Example Requests
-Login
+## API Endpoints
 
-Request
+### Authentication
 
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/auth/register` | Register new customer | No |
+| POST | `/api/auth/login` | Login & get JWT | No |
+| GET | `/api/auth/me` | Current logged-in user | Yes |
+
+### Customers
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/customers` | Search customers | Yes |
+| POST | `/api/customers` | Create customer | No |
+| GET | `/api/customers/{id}` | Get customer details | Yes |
+| GET | `/api/customers/{id}/events` | Customer events | Yes |
+
+### Orders
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/orders/checkout` | Place an order | Yes |
+| GET | `/api/orders/customer/{customerId}` | Get orders for customer | Yes |
+
+### Events
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/events` | Log customer event | Yes |
+| GET | `/api/events/customer/{customerId}` | Get customer events | Yes |
+
+### Products
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/products` | List all products | No |
+| GET | `/api/products/search?query=` | Search products | No |
+
+## Example Requests
+
+### Login
+
+**Request**
+
+```json
 {
   "email": "john@example.com",
   "password": "password123"
 }
+```
 
+**Response**
 
-Response
-
+```json
 {
   "token": "eyJhbGciOiJIUzI1NiIsIn..."
 }
+```
 
-Checkout Order
+### Checkout Order
+
+```json
 {
   "customerId": 1,
   "items": [
@@ -161,8 +195,11 @@ Checkout Order
   "paymentMethod": "CREDIT_CARD",
   "shippingAddress": "123 Market St"
 }
+```
 
-Request Lifecycle
+## Request Lifecycle
+
+```mermaid
 sequenceDiagram
     participant Client
     participant Controller
@@ -178,8 +215,11 @@ sequenceDiagram
     Repo-->>Service: Entities
     Service-->>Controller: Response
     Controller-->>Client: JSON Response
+```
 
-Database ERD
+## Database ERD
+
+```mermaid
 erDiagram
     CUSTOMERS ||--o{ ORDERS : places
     ORDERS ||--o{ ORDER_ITEMS : contains
@@ -219,16 +259,20 @@ erDiagram
         bigint customer_id FK
         jsonb event_data
     }
+```
 
-Testing
+## Testing
+
+```bash
 mvn clean test
 mvn clean test jacoco:report
+```
 
+Coverage report: `target/site/jacoco/index.html`
 
-Coverage report:
-target/site/jacoco/index.html
+## Postman Collection
 
-Postman Collection
+```json
 {
   "info": {
     "name": "Retail Shopping API",
@@ -240,7 +284,10 @@ Postman Collection
       "request": {
         "method": "POST",
         "url": "{{base_url}}/api/auth/login",
-        "body": {"mode": "raw", "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"}
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+        }
       }
     },
     {
@@ -252,13 +299,13 @@ Postman Collection
     }
   ]
 }
+```
 
+Postman environment variable: `base_url = http://localhost:8080`
 
-Postman environment variable:
+## Project Structure
 
-base_url = http://localhost:8080
-
-Project Structure
+```
 src/
 ├── main/java/com/retailcorp/retailshopping/
 │   ├── config/
@@ -272,25 +319,20 @@ src/
 └── test/java/com/retailcorp/retailshopping/
     ├── integration/
     └── unit/
+```
 
-Contributing
+## Contributing
 
-Fork the repo
+1. Fork the repo
+2. Create your feature branch: `git checkout -b feature/my-feature`
+3. Commit changes: `git commit -m "Add feature"`
+4. Push: `git push origin feature/my-feature`
+5. Open a Pull Request
 
-Create your feature branch: git checkout -b feature/my-feature
+## Versioning
 
-Commit changes: git commit -m "Add feature"
+Semantic Versioning (SemVer): `MAJOR.MINOR.PATCH`
 
-Push: git push origin feature/my-feature
-
-Open a Pull Request
-
-Versioning
-
-Semantic Versioning (SemVer):
-
-MAJOR.MINOR.PATCH
-
-License
+## License
 
 MIT License © RetailCorp
