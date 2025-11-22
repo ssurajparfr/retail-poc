@@ -2,7 +2,7 @@ name: Build & Push Backend Docker Image
 
 on:
   push:
-    branches: [ main, fundamental-improvements ]
+    branches: [ main]
     paths:
       - 'backend/**'
       - 'pom.xml'
@@ -11,7 +11,7 @@ on:
     paths:
       - 'backend/**'
       - 'pom.xml'
-  workflow_dispatch:
+  workflow_dispatch:      
 
 jobs:
   build-and-test:
