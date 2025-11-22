@@ -51,6 +51,8 @@ jobs:
 
       - name: Run Unit & Integration Tests
         working-directory: ./backend
+        env:
+          RETAIL_JWT_SECRET: ${{ secrets.RETAIL_JWT_SECRET }}
         run: |
           mvn clean verify -DskipDocker -B
 
