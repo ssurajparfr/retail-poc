@@ -4,6 +4,7 @@ A production-ready Spring Boot 3 REST API for retail shopping with JWT authentic
 
 <p align="left">
   <img src="https://github.com/ssurajparfr/retail-poc/actions/workflows/backend.yml/badge.svg" alt="Build Status" />
+  <img src="https://codecov.io/gh/ssurajparfr/retail-poc/branch/main/graph/badge.svg" alt="Coverage" />
   <img src="https://img.shields.io/badge/Java-21-007396?logo=openjdk" />
   <img src="https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot" />
   <img src="https://img.shields.io/badge/PostgreSQL-15+-336791?logo=postgresql" />
@@ -23,9 +24,27 @@ flowchart TD
     E --> F[(PostgreSQL)]
 ```
 
+### Code Coverage by Package
+
+| Package | Coverage |
+|---------|----------|
+| controller | 96.15% |
+| entity | 100% |
+| exception | 100% |
+| service | 100% |
+| util | 100% |
+
+[![codecov](https://codecov.io/gh/ssurajparfr/retail-poc/graph/badge.svg)](https://codecov.io/gh/ssurajparfr/retail-poc)
+
+### Coverage Sunburst
+
+<a href="https://codecov.io/gh/ssurajparfr/retail-poc">
+  <img src="https://codecov.io/gh/ssurajparfr/retail-poc/graphs/sunburst.svg" width="400" />
+</a>
+
 ## Tech Stack
 
-- **Java 17+**
+- **Java 21+**
 - **Spring Boot 3.x**
 - **Spring Security** (JWT)
 - **Spring Data JPA** (Hibernate)
@@ -36,7 +55,7 @@ flowchart TD
 
 ## Prerequisites
 
-- Java 17
+- Java 21
 - Maven 3.8+
 - PostgreSQL 15+
 - (Optional) Docker
@@ -83,7 +102,7 @@ mvn spring-boot:run "-Dspring-boot.run.profiles=local"
 **Dockerfile**
 
 ```dockerfile
-FROM eclipse-temurin:17-jdk
+FROM eclipse-temurin:21-jdk
 WORKDIR /app
 COPY target/retailshopping.jar app.jar
 ENTRYPOINT ["java","-jar","/app/app.jar"]
@@ -269,7 +288,9 @@ mvn clean test
 mvn clean test jacoco:report
 ```
 
-Coverage report: `target/site/jacoco/index.html`
+Coverage report (local): `target/site/jacoco/index.html`
+
+**Live Coverage Report:** [Codecov Dashboard](https://codecov.io/gh/ssurajparfr/retail-poc)
 
 ## Postman Collection
 
