@@ -10,24 +10,23 @@ import java.time.LocalDate;
 
 @Service
 public class AuthService {
-    
+
     @Autowired
     private CustomerRepository customerRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
+
     @Autowired
     private JwtTokenProvider tokenProvider;
-    
+
     public AuthResponse register(RegisterRequest request) {
-        // Check if email already exists
         if (customerRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already registered");
         }
-        
-        // Create new customer
+
         Customer customer = new Customer();
+
         customer.setFirstName(request.getFirstName());
         customer.setLastName(request.getLastName());
         customer.setEmail(request.getEmail());
@@ -38,37 +37,60 @@ public class AuthService {
         customer.setState(request.getState());
         customer.setZipCode(request.getZipCode());
         customer.setCountry(request.getCountry());
+
         customer.setRegistrationDate(LocalDate.now());
         customer.setCustomerSegment("Standard");
         customer.setLifetimeValue(0.0);
-        
-        // Save customer
+
         Customer savedCustomer = customerRepository.save(customer);
-        
-        // Generate JWT token
+
         String token = tokenProvider.generateToken(savedCustomer.getEmail());
-        
-        return new AuthResponse(token, savedCustomer);
+
+       return AuthResponse.builder()
+        .token(token)
+        .customer(toCustomerResponse(savedCustomer))
+        .build();
+
     }
-    
+
     public AuthResponse login(LoginRequest request) {
-        // Find customer by email
         Customer customer = customerRepository.findByEmail(request.getEmail())
-            .orElseThrow(() -> new RuntimeException("Invalid email or password"));
-        
-        // Verify password
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
         if (!passwordEncoder.matches(request.getPassword(), customer.getPasswordHash())) {
             throw new RuntimeException("Invalid email or password");
         }
-        
-        // Generate JWT token
+
         String token = tokenProvider.generateToken(customer.getEmail());
-        
-        return new AuthResponse(token, customer);
+
+       return AuthResponse.builder()
+        .token(token)
+        .customer(toCustomerResponse(customer))
+        .build();
+
     }
-    
-    public Customer getCurrentCustomer(String email) {
-        return customerRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+    public CustomerResponse getCurrentCustomer(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        return toCustomerResponse(customer);
+    }
+
+    private CustomerResponse toCustomerResponse(Customer c) {
+        return CustomerResponse.builder()
+                .customerId(c.getCustomerId())
+                .firstName(c.getFirstName())
+                .lastName(c.getLastName())
+                .email(c.getEmail())
+                .phone(c.getPhone())
+                .address(c.getAddress())
+                .city(c.getCity())
+                .state(c.getState())
+                .zipCode(c.getZipCode())
+                .country(c.getCountry())
+                .registrationDate(c.getRegistrationDate())
+                .customerSegment(c.getCustomerSegment())
+                .lifetimeValue(c.getLifetimeValue())
+                .build();
     }
 }

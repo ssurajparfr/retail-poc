@@ -1,11 +1,10 @@
 package com.retailcorp.retailshopping.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
-public class RegisterRequest {
+public class CustomerRegistrationRequest {
 
     @NotBlank private String firstName;
     @NotBlank private String lastName;
@@ -13,16 +12,13 @@ public class RegisterRequest {
     @Email @NotBlank
     private String email;
 
-    @NotBlank
-    private String password; // plain-text coming from frontend
-
     @NotBlank private String phone;
 
     @NotBlank private String address;
     @NotBlank private String city;
     @NotBlank private String state;
-    @NotBlank private String zipCode;
+    @NotBlank private String zip;
     @NotBlank private String country;
 
-    private String customerSegment;
+    @NotBlank private String membershipType;
 }

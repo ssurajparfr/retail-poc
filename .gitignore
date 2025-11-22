@@ -1,41 +1,82 @@
-# ========================
+#############################
 # Backend (Spring Boot)
-# ========================
+#############################
 /backend/target/
+/backend/.mvn/wrapper/maven-wrapper.jar
+/backend/.mvn/wrapper/maven-wrapper.properties
 *.class
 *.log
 
-# ========================
+# Exclude application-local configurations or secrets
+application-local.yaml
+application-dev.yaml
+application-test.yaml
+
+# HTTP client scratch files
+*.http
+
+# Maven
+.mvn/
+.settings/
+.project
+
+
+#############################
 # Frontend (React + Tailwind)
-# ========================
+#############################
 /frontend/node_modules/
 /frontend/build/
+/frontend/dist/
 /frontend/.pnp
 /frontend/.pnp.js
 /frontend/coverage
 /frontend/npm-debug.log*
 /frontend/yarn-debug.log*
 /frontend/yarn-error.log*
+/frontend/.parcel-cache/
+/frontend/.vercel/
+/frontend/.next/
 
-# ========================
+
+#############################
 # Database
-# ========================
+#############################
 /db/*.dump
 /db/*.csv
+/db/*.bak
+/db/data/
+flyway.conf
 
-# ========================
+
+#############################
 # OS / IDE files
-# ========================
+#############################
 .DS_Store
+Thumbs.db
 *.iml
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# ========================
+
+#############################
 # Environment files
-# ========================
+#############################
 .env
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
+
+#############################
+# Testing
+#############################
+/frontend/jest-coverage/
+/backend/coverage/
+/backend/jacoco.exec
+test-output/
+surefire-reports/

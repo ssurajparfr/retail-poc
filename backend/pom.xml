@@ -61,6 +61,12 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 
 	<dependency>
 		<groupId>org.springdoc</groupId>
@@ -125,6 +131,34 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<!-- JaCoCo plugin -->
+        <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.11</version> <!-- use latest stable -->
+			<configuration>
+				<excludes>
+					<exclude>**/config/**</exclude>
+					<exclude>**/RetailApplication.class</exclude>
+				</excludes>
+			</configuration>
+            <executions>
+                <!-- Run during test phase -->
+                <execution>
+                    <goals>
+                        <goal>prepare-agent</goal>
+                    </goals>
+                </execution>
+                <!-- Generate report after tests -->
+                <execution>
+                    <id>report</id>
+                    <phase>test</phase>
+                    <goals>
+                        <goal>report</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
 		</plugins>
 	</build>
 

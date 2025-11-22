@@ -19,7 +19,6 @@ import lombok.Data;
 @Entity
 @Table(name = "customer_events")
 @Data
-@Convert(attributeName = "eventData", converter = JsonStringConverter.class)
 public class CustomerEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,12 +26,10 @@ public class CustomerEvent {
     private Long customerId;
     private LocalDateTime eventTimestamp=LocalDateTime.now();
     
-    // @Column(columnDefinition = "jsonb")
-    // @Convert(converter = JsonStringConverter.class)
-    // @Type(JsonBinaryType.class)
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "event_data", columnDefinition = "jsonb")
-    private String eventData; // store JSON as String
+    private String eventData;
+
     
     private LocalDateTime loadTimestamp;
 }
