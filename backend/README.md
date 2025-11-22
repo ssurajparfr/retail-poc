@@ -3,7 +3,8 @@
 A production-ready Spring Boot 3 REST API for retail shopping with JWT authentication, product catalog, customer events, and order management.
 
 <p align="left">
-  <img src="https://github.com/ssurajparfr/retail-poc/actions/workflows/backend.yml/badge.svg" alt="Build Status" />
+  <img src="https://github.com/ssurajparfr/retail-poc/actions/workflows/build.yml/badge.svg" alt="Build Status" />
+  <img src="https://codecov.io/gh/ssurajparfr/retail-poc/branch/main/graph/badge.svg" alt="Coverage" />
   <img src="https://img.shields.io/badge/Java-21-007396?logo=openjdk" />
   <img src="https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot" />
   <img src="https://img.shields.io/badge/PostgreSQL-15+-336791?logo=postgresql" />
@@ -269,7 +270,9 @@ mvn clean test
 mvn clean test jacoco:report
 ```
 
-Coverage report: `target/site/jacoco/index.html`
+Coverage report (local): `target/site/jacoco/index.html`
+
+**Live Coverage Report:** [https://ssurajparfr.github.io/retail-poc/](https://ssurajparfr.github.io/retail-poc/)
 
 ## Postman Collection
 
