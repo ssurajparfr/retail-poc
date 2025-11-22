@@ -3,7 +3,8 @@
 A production-ready Spring Boot 3 REST API for retail shopping with JWT authentication, product catalog, customer events, and order management.
 
 <p align="left">
-  <img src="https://img.shields.io/badge/Java-17-007396?logo=openjdk" />
+  <img src="https://github.com/ssurajparfr/retail-poc/actions/workflows/backend.yml/badge.svg" alt="Build Status" />
+  <img src="https://img.shields.io/badge/Java-21-007396?logo=openjdk" />
   <img src="https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?logo=springboot" />
   <img src="https://img.shields.io/badge/PostgreSQL-15+-336791?logo=postgresql" />
   <img src="https://img.shields.io/badge/Maven-Build-C71A36?logo=apache-maven" />
