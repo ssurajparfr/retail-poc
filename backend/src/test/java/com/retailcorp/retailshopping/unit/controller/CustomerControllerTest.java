@@ -49,7 +49,19 @@ public class CustomerControllerTest {
 
         mockMvc.perform(post("/api/customers")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
+                .content("{\r\n" + //
+                                        "              \"firstName\": \"John\",\r\n" + //
+                                        "              \"lastName\": \"Doe\",\r\n" + //
+                                        "              \"email\": \"john.doe@example.com\",\r\n" + //
+                                        "              \"password\": \"Password123\",\r\n" + //
+                                        "              \"phone\": \"1234567890\",\r\n" + //
+                                        "              \"address\": \"123 Main St\",\r\n" + //
+                                        "              \"city\": \"New York\",\r\n" + //
+                                        "              \"state\": \"NY\",\r\n" + //
+                                        "              \"zipCode\": \"10001\",\r\n" + //
+                                        "              \"country\": \"USA\",\r\n" + //
+                                        "              \"customerSegment\": \"Standard\"\r\n" + //
+                                        "            }"))
             .andExpect(status().isCreated())
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
 
