@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:15:///testdb
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+jwt:
+  secret: p9d7f6g8h2j1k4l5m6n7o8p9q0r1s2t3
+  expiration: 86400000
+
+logging:
+  level:
+    com.retailcorp: INFO
+    root: INFO

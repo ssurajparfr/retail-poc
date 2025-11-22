@@ -15,6 +15,9 @@ COPY . .
 ARG REACT_APP_API_BASE_URL
 ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
 
+# Debug: print the value right before the build
+RUN echo "API URL passed to Docker build: $REACT_APP_API_BASE_URL"
+
 # Step 5: Build production-ready React app
 RUN npm run build
 

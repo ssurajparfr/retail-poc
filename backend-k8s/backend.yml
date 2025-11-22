@@ -15,13 +15,18 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ssurajparfr/retail-backend:latest
+          image: ssurajparfr/retail-backend:e2660c1a30e6c09a5b37bedc21f6f20153410a37
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
               value: jdbc:postgresql://postgres:5432/retail_poc
+            - name: RETAIL_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: retail-jwt-secret
+                  key: RETAIL_JWT_SECRET
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:

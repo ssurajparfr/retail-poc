@@ -1,8 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, User, Package, TrendingUp, LogOut, Home } from 'lucide-react';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+// Use environment variable when provided (e.g. in dev or CI).
+// Fallback to the local k8s host used for development (must map to localhost in hosts file).
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://my.retail.local/api';
 
+// --- ADDED: auth helpers and apiFetch wrapper ---
+const AUTH_TOKEN_KEY = 'retail_token';
+
+const setAuthToken = (token) => {
+  if (token) {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+  }
+};
+
+const getAuthToken = () => localStorage.getItem(AUTH_TOKEN_KEY);
+
+const apiFetch = (url, options = {}) => {
+  const token = getAuthToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {})
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return fetch(url, { ...options, headers });
+};
 
 // Main App Component
 export default function RetailApp() {
@@ -17,9 +41,28 @@ export default function RetailApp() {
     fetchProducts();
   }, []);
 
+  // Restore session if token exists
+  useEffect(() => {
+    const token = getAuthToken();
+    if (token) {
+      (async () => {
+        try {
+          // Try to fetch current user from /me (adjust endpoint as backend implements)
+          const resp = await apiFetch(`${API_BASE_URL}/me`);
+          if (resp.ok) {
+            const cust = await resp.json();
+            setCurrentCustomer(cust);
+          }
+        } catch (err) {
+          console.error('Failed to restore session:', err);
+        }
+      })();
+    }
+  }, []);
+
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/products`);
+      const response = await apiFetch(`${API_BASE_URL}/products`);
       const data = await response.json();
       setProducts(data);
     } catch (error) {
@@ -36,8 +79,8 @@ export default function RetailApp() {
     }
     
     try {
-      const response = await fetch(`${API_BASE_URL}/products/search?query=${encodeURIComponent(query)}`);
-      const data = await response.json();
+  const response = await apiFetch(`${API_BASE_URL}/products/search?query=${encodeURIComponent(query)}`);
+  const data = await response.json();
       setProducts(data);
       
       // Log search event
@@ -58,9 +101,8 @@ export default function RetailApp() {
 
   const logEvent = async (eventData) => {
     try {
-      await fetch(`${API_BASE_URL}/events`, {
+      await apiFetch(`${API_BASE_URL}/events`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(eventData)
       });
     } catch (error) {
@@ -142,9 +184,8 @@ export default function RetailApp() {
     };
 
     try {
-      const response = await fetch(`${API_BASE_URL}/checkout`, {
+      const response = await apiFetch(`${API_BASE_URL}/checkout`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(order)
       });
 
@@ -165,7 +206,7 @@ export default function RetailApp() {
 
         // Fetch updated customer to get new Lifetime Value
   try {
-    const customerResp = await fetch(`${API_BASE_URL}/customers/${currentCustomer.customerId}`);
+    const customerResp = await apiFetch(`${API_BASE_URL}/customers/${currentCustomer.customerId}`);
     if (customerResp.ok) {
       const updatedCustomer = await customerResp.json();
       setCurrentCustomer(updatedCustomer); // <-- Update parent/customer state
@@ -186,14 +227,17 @@ export default function RetailApp() {
 
   const handleSignIn = async (customerData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/customers`, {
+      const response = await apiFetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(customerData)
       });
 
       if (response.ok) {
-        const customer = await response.json();
+        // backend may return { token, customer } or just customer
+        const data = await response.json();
+        const token = data.token || data.authToken || data.accessToken;
+        const customer = data.customer || data;
+        if (token) setAuthToken(token);
         setCurrentCustomer(customer);
         setCurrentView('home');
         
@@ -206,6 +250,12 @@ export default function RetailApp() {
             session_duration: 0
           })
         });
+        
+        alert(`Welcome ${customer.firstName}! Account created successfully.`);
+      } else {
+        const text = await response.text();
+        console.error('Sign in failed:', text);
+        alert('Sign in failed. Please try again.');
       }
     } catch (error) {
       console.error('Sign in error:', error);
@@ -213,10 +263,61 @@ export default function RetailApp() {
     }
   };
 
+  const handleLogin = async (loginData) => {
+    try {
+      // Prefer an auth/login endpoint that returns a token
+      const resp = await apiFetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        body: JSON.stringify(loginData)
+      });
+
+      if (resp.ok) {
+        const data = await resp.json();
+        const token = data.token || data.authToken || data.accessToken;
+        const customer = data.customer || data;
+        if (token) setAuthToken(token);
+        setCurrentCustomer(customer);
+        setCurrentView('home');
+        
+        // Log login event
+        logEvent({
+          customerId: customer.customerId,
+          eventData: JSON.stringify({
+            event_type: 'login',
+            page: 'home',
+            timestamp: new Date().toISOString()
+          })
+        });
+        
+        alert(`Welcome back, ${customer.firstName}!`);
+        return;
+      }
+
+      // Fallback: try lookup by email (if backend supports)
+      const fallback = await apiFetch(`${API_BASE_URL}/customers/search?email=${encodeURIComponent(loginData.email)}`);
+      if (fallback.ok) {
+        const customers = await fallback.json();
+        if (Array.isArray(customers) && customers.length > 0) {
+          setCurrentCustomer(customers[0]);
+          setCurrentView('home');
+          alert(`Welcome back, ${customers[0].firstName}!`);
+          return;
+        }
+      }
+
+      alert('Customer not found. Please check your credentials or create a new account.');
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Login failed. Please try again or create a new account.');
+    }
+  };
+
   const handleSignOut = () => {
     setCurrentCustomer(null);
     setCart([]);
     setCurrentView('home');
+    // clear token
+    setAuthToken(null);
   };
 
   // Render different views
@@ -227,7 +328,9 @@ export default function RetailApp() {
       case 'cart':
         return <CartView cart={cart} updateQuantity={updateCartQuantity} removeFromCart={removeFromCart} calculateTotal={calculateTotal} handleCheckout={handleCheckout} />;
       case 'signin':
-        return <SignInView onSignIn={handleSignIn} />;
+        return <SignInView onSignIn={handleSignIn} onSwitchToLogin={() => setCurrentView('login')} />;
+      case 'login':
+        return <LoginView onLogin={handleLogin} onSwitchToSignIn={() => setCurrentView('signin')} />;
       case 'orders':
         return <OrdersView currentCustomer={currentCustomer} />;
       default:
@@ -295,18 +398,27 @@ export default function RetailApp() {
                   <button
                     onClick={handleSignOut}
                     className="p-2 text-gray-700 hover:text-red-600"
+                    title="Sign Out"
                   >
                     <LogOut className="w-5 h-5" />
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={() => setCurrentView('signin')}
-                  className="flex items-center space-x-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <User className="w-5 h-5" />
-                  <span>Sign In</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCurrentView('login')}
+                    className="flex items-center space-x-1 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50"
+                  >
+                    <User className="w-5 h-5" />
+                    <span>Login</span>
+                  </button>
+                  <button
+                    onClick={() => setCurrentView('signin')}
+                    className="flex items-center space-x-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    <span>Sign Up</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -474,12 +586,13 @@ function CartView({ cart, updateQuantity, removeFromCart, calculateTotal, handle
   );
 }
 
-// Sign In View
-function SignInView({ onSignIn }) {
+// Sign In View (Registration)
+function SignInView({ onSignIn, onSwitchToLogin }) {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
+    password: '',
     phone: '',
     address: '',
     city: '',
@@ -493,7 +606,7 @@ function SignInView({ onSignIn }) {
 
   const handleSubmit = () => {
     if (!formData.firstName || !formData.lastName || !formData.email) {
-      alert('Please fill in required fields');
+      alert('Please fill in required fields (First Name, Last Name, Email)');
       return;
     }
     onSignIn(formData);
@@ -502,7 +615,9 @@ function SignInView({ onSignIn }) {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="bg-white rounded-lg shadow-md p-8">
-        <h2 className="text-3xl font-bold text-gray-900 mb-6">Create Account</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+        <p className="text-gray-600 mb-6">Join RetailCo and start shopping today</p>
+        
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -511,7 +626,8 @@ function SignInView({ onSignIn }) {
                 type="text"
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="John"
               />
             </div>
             <div>
@@ -520,7 +636,8 @@ function SignInView({ onSignIn }) {
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Doe"
               />
             </div>
           </div>
@@ -531,7 +648,18 @@ function SignInView({ onSignIn }) {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="john.doe@example.com"
+            />
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+            <input
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter a secure password"
             />
           </div>
 
@@ -541,7 +669,8 @@ function SignInView({ onSignIn }) {
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="555-0123"
             />
           </div>
 
@@ -551,7 +680,8 @@ function SignInView({ onSignIn }) {
               type="text"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="123 Main St"
             />
           </div>
 
@@ -562,7 +692,8 @@ function SignInView({ onSignIn }) {
                 type="text"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="New York"
               />
             </div>
             <div>
@@ -571,7 +702,8 @@ function SignInView({ onSignIn }) {
                 type="text"
                 value={formData.state}
                 onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="NY"
               />
             </div>
             <div>
@@ -580,7 +712,8 @@ function SignInView({ onSignIn }) {
                 type="text"
                 value={formData.zipCode}
                 onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="10001"
               />
             </div>
           </div>
@@ -589,8 +722,126 @@ function SignInView({ onSignIn }) {
             onClick={handleSubmit}
             className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-lg transition-colors mt-6"
           >
-            Create Account & Continue
+            Create Account
           </button>
+
+          <div className="text-center mt-4">
+            <p className="text-gray-600">
+              Already have an account?{' '}
+              <button
+                onClick={onSwitchToLogin}
+                className="text-blue-600 hover:text-blue-700 font-semibold"
+              >
+                Login here
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Login View
+function LoginView({ onLogin, onSwitchToSignIn }) {
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = () => {
+    if (!loginData.email || !loginData.password) {
+      alert('Please enter your email and password');
+      return;
+    }
+    onLogin(loginData);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSubmit();
+    }
+  };
+
+  return (
+    <div className="max-w-md mx-auto">
+      <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="text-center mb-8">
+          <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <User className="w-8 h-8 text-blue-600" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+          <p className="text-gray-600">Login to your RetailCo account</p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <input
+              type="email"
+              value={loginData.email}
+              onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+              onKeyPress={handleKeyPress}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="john.doe@example.com"
+              autoComplete="email"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={loginData.password}
+                onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                onKeyPress={handleKeyPress}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter your password"
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? '👁️' : '👁️‍🗨️'}
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+            <p className="text-sm text-yellow-800">
+              <strong>Demo Mode:</strong> Backend authentication is not yet implemented. 
+              For now, you can use any email from registered customers.
+            </p>
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-lg transition-colors mt-6"
+          >
+            Login
+          </button>
+
+          <div className="text-center mt-4">
+            <button className="text-sm text-blue-600 hover:text-blue-700">
+              Forgot password?
+            </button>
+          </div>
+
+          <div className="text-center mt-6">
+            <p className="text-gray-600">
+              Don't have an account?{' '}
+              <button
+                onClick={onSwitchToSignIn}
+                className="text-blue-600 hover:text-blue-700 font-semibold"
+              >
+                Sign up here
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -610,11 +861,19 @@ function OrdersView({ currentCustomer }) {
 
   const fetchCustomerOrders = async () => {
     setLoading(true);
-  try {
-    const response = await fetch(`${API_BASE_URL}/orders/${currentCustomer.customerId}`);
-    if (!response.ok) throw new Error('Failed to fetch orders');
-    const data = await response.json();
-    setOrders(data);
+    try {
+      // Fetch orders for the current customer
+      const resp = await apiFetch(`${API_BASE_URL}/orders/${currentCustomer.customerId}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        setOrders(data || []);
+      } else if (resp.status === 403) {
+        // Not authenticated: clear orders and let UI prompt sign in
+        setOrders([]);
+      } else {
+        console.error('Failed to fetch orders:', resp.status);
+        setOrders([]);
+      }
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
